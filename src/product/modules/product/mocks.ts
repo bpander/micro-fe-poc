@@ -2,6 +2,7 @@ import { Product } from './types';
 
 export const mockProduct: Product = {
   name: 'Tractor',
+  sku: 'tractor-parent-sku',
   variants: [
     {
       sku: 't_porsche',
