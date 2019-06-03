@@ -8,11 +8,14 @@ interface ContextRequestedDetail<ContextMap, K extends keyof ContextMap> {
 
 export const requestContext = <ContextMap, K extends keyof ContextMap>(
   element: HTMLElement, name: K,
-): ContextMap[K] | undefined => {
+): ContextMap[K] => {
   const e = new CustomEvent<ContextRequestedDetail<ContextMap, K>>(
     EVENT_NAME, { bubbles: true, detail: { name } },
   );
   element.dispatchEvent(e);
+  if (!e.detail.context) {
+    throw new Error('something');
+  }
   return e.detail.context;
 };
 

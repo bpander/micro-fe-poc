@@ -1,8 +1,9 @@
 import React from 'react';
+import { Product } from 'product/modules/product/types';
 
 interface AddToCartButtonProps {
-  price: number;
-  addToCart: () => Promise<void>;
+  addToCart: (sku: string, qty: number) => Promise<void>;
+  product?: Product;
 }
 
 interface AddToCartButtonState {
@@ -16,7 +17,7 @@ export class AddToCartButton extends React.Component<AddToCartButtonProps, AddTo
 
   onClick = async () => {
     this.setState({ isAdding: true });
-    await this.props.addToCart();
+    await this.props.addToCart(this.props.product!.sku, 1);
     this.setState({ isAdding: false });
   };
 
@@ -26,7 +27,7 @@ export class AddToCartButton extends React.Component<AddToCartButtonProps, AddTo
         onClick={this.onClick}
         disabled={this.state.isAdding}
       >
-        Buy for ${this.props.price.toFixed(2)}
+        Buy for ${this.props.product!.variants[0].price.toFixed(2)}
       </button>
     );
   }
