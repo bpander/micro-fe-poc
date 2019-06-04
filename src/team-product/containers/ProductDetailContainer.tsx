@@ -21,8 +21,13 @@ export const ProductDetailContainer = registerContainer<JSX.Element>({
       />
      */
 
-    return productStore.stream.pipe(
-      map(products => <div>{products.length}</div>),
+    return productStore.pipe(
+      map(products => (
+        <div>
+          {products.length}
+          <button onClick={() => productStore.next(s => [ ...s, { sku: '', name: '' }])}>add</button>
+        </div>
+      )),
     );
   },
 

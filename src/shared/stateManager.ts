@@ -8,19 +8,22 @@ export interface Next<T> {
 
 export interface Store<T> {
   next: Next<T>;
-  stream: Observable<T>;
+  pipe: Observable<T>['pipe'];
 }
 
 export interface Setter<T> {
   (state: T): T;
 }
 
+// TODO: Get this from a library
+const identity = <T>(thing: T): T => thing;
+
 export const createStore = <T>(initialState: T): Store<T> => {
   const subject = new Subject<Setter<T>>();
-  const reducer = (acc: T, setter: Setter<T>) => setter(acc)
+  const reducer = (acc: T, setter: Setter<T>) => setter(acc);
   const stream = subject.pipe(
-    scan(reducer),
-    startWith(initialState),
+    startWith(identity),
+    scan(reducer, initialState),
   );
-  return { next: subject.next, stream };
+  return { next: subject.next.bind(subject), pipe: stream.pipe.bind(stream) };
 };
