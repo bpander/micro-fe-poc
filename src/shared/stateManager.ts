@@ -8,12 +8,25 @@ export interface Next<T> {
 
 export interface Store<T> {
   next: Next<T>;
-  pipe: Observable<T>['pipe'];
+  stream: Observable<T>;
 }
 
 export interface Setter<T> {
   (state: T): T;
 }
+
+export enum EpochStatus {
+  None = 'None',
+  Loading = 'Loading',
+  Loaded = 'Loaded',
+  Error = 'Error',
+}
+
+export type Epoch<R = void, E = Error> =
+  | { type: EpochStatus.None }
+  | { type: EpochStatus.Loading, request: R, force: boolean; }
+  | { type: EpochStatus.Loaded, request: R }
+  | { type: EpochStatus.Error, error: E }
 
 // TODO: Get this from a library
 const identity = <T>(thing: T): T => thing;
@@ -25,5 +38,5 @@ export const createStore = <T>(initialState: T): Store<T> => {
     startWith(identity),
     scan(reducer, initialState),
   );
-  return { next: subject.next.bind(subject), pipe: stream.pipe.bind(stream) };
+  return { next: subject.next.bind(subject), stream };
 };
