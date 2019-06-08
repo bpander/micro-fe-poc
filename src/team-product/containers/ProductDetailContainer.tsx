@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 
 import { registerContainer } from 'orchestrator/createContainer';
 import { requestStore } from 'shared/config/DependencyMap';
-import { map, tap } from 'rxjs/operators';
+import { map, tap, share } from 'rxjs/operators';
 import { combineLatest } from 'rxjs';
 import { fetchProduct } from 'team-product/modules/product/actions';
 import { EpochStatus, Next, Epoch } from 'shared/stateManager';
@@ -36,10 +36,10 @@ const ProductDetail: React.FC<ProductDetailProps> = props => {
   );
 };
 
-export const ProductDetailContainer = registerContainer<JSX.Element>({
+export const ProductDetailContainer = registerContainer<JSX.Element, { sku: string | null }>({
   tagName: 'product-detail-container',
   attributes: [ 'sku' ],
-  onConnected: async (el: HTMLElement) => {
+  onConnected: async (el: HTMLElement, attributesStream) => {
     const productsStore = await requestStore(el, 'productsStore');
     const fetchProductEpochStore = fetchProduct(productsStore);
 
@@ -53,23 +53,21 @@ export const ProductDetailContainer = registerContainer<JSX.Element>({
       />
     */
 
-    const sku = ''; // TODO: Get this from attributesStream
-    const productStream = productsStore.stream.pipe(
-      map(products => products.find(p => p.sku === sku)),
-      tap(product => {
+    const productStream = combineLatest(productsStore.stream, attributesStream).pipe(
+      map(([ products, attributes ]) => products.find(p => p.sku === attributes.sku)),
+      tap(async product => {
+        console.log('tap', product);
         if (!product) {
-          fetchProductEpochStore.next(() => ({ type: EpochStatus.Loading, request: sku, force: false }));
+          console.log('fetchProduct next');
+          await fetchProductEpochStore.next(() => ({ type: EpochStatus.Loading, request: '', force: false }));
         }
       }),
     );
 
-    return combineLatest(fetchProductEpochStore.stream, productStream).pipe(
-      map(([ fetchProductEpoch, product ]) => (
-        <ProductDetail
-          product={product}
-          fetchProductEpoch={fetchProductEpoch}
-          next={{ product: productsStore.next }}
-        />
+    return combineLatest(productStream, fetchProductEpochStore.stream).pipe(
+      tap(console.log),
+      map(([ product, fetchProductEpoch ]) => (
+        <div>hi {product && product.name}</div>
       )),
     );
   },

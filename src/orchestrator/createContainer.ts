@@ -6,17 +6,17 @@ interface Attributes {
   [key: string]: string | null;
 }
 
-export interface ContainerConfig<T> {
+export interface ContainerConfig<T, A extends Attributes> {
   tagName: string;
 
   // TODO: Make attributesStream infer keys from `attributes`
-  attributes: string[];
+  attributes: Array<keyof A>;
   onConnected: (el: HTMLElement, attributesStream: Observable<Attributes>) => Promise<Observable<T>>;
 
   render?: (el: HTMLElement, data: T) => void;
 }
 
-export const registerContainer = <T>(config: ContainerConfig<T>) => {
+export const registerContainer = <T, A extends Attributes>(config: ContainerConfig<T, A>) => {
   // TODO: Make this capable of extending other element types
   class Container extends HTMLElement {
 
@@ -29,7 +29,7 @@ export const registerContainer = <T>(config: ContainerConfig<T>) => {
     constructor() {
       super();
       const initialAttributes = config.attributes.reduce(
-        (acc, name) => ({ ...acc, [name]: this.getAttribute(name) }),
+        (acc, name) => ({ ...acc, [name]: this.getAttribute(name as string) }),
         {},
       );
       this.attributesStream = new BehaviorSubject<Attributes>(initialAttributes);

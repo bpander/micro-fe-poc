@@ -13,4 +13,5 @@ provideContext<StoreMap>(rootEl!, {
 });
 
 const pdc = new ProductDetailContainer();
+pdc.setAttribute('sku', '12');
 rootEl!.appendChild(pdc);
