@@ -1,4 +1,4 @@
-import { Setter, createStore, mapStore, composeStore } from 'shared/state-manager';
+import { Setter, createStore, mapStore, composeStore, Dispatch } from 'shared/state-manager';
 import 'index.css';
 
 const add = (n: number): Setter<number> => s => s + n;
@@ -7,6 +7,7 @@ const priceStore = createStore(1);
 const mappedStore = mapStore(priceStore, n => '$' + n.toFixed(2));
 const nameStore = createStore([ 'phil' ]);
 const compoundStore = composeStore({ mapped: mappedStore, name: nameStore });
+const dispatch: Dispatch<{ mapped: number; name: string[] }> = compoundStore.dispatch;
 
 mappedStore.subscribe(s => console.log('mappedStore', s));
 priceStore.subscribe(s => console.log('priceStore', s));
@@ -20,9 +21,9 @@ const test = () => {
   priceStore.dispatch(add(1));
 
   console.log('=== dispatch compoundStore');
-  compoundStore.dispatch(s => ({ ...s, name: addName('lkj')(s.name) }));
+  dispatch(s => ({ ...s, name: addName('lkj')(s.name) }));
 
   console.log('=== dispatch byKey');
-  compoundStore.dispatch({ name: addName('abc') });
+  dispatch({ name: addName('abc'), mapped: add(1) });
 };
 test();

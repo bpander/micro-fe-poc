@@ -14,12 +14,14 @@ export interface Unsubscribe {
   (): void;
 }
 
+export interface Dispatch<T> {
+  (setter: Setter<T>): void;
+  (setters: { [K in keyof T]?: Setter<T[K]> }): void;
+}
+
 export interface Store<T, U = T> {
   getState: () => T;
-  dispatch: {
-    (setter: Setter<T>): void;
-    (setters: { [K in keyof T]?: Setter<T[K]> }): void;
-  }
+  dispatch: Dispatch<T>;
   subscribe: (listener: (newState: U) => void) => Unsubscribe;
 }
 
