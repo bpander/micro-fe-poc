@@ -26,6 +26,16 @@ export interface Store<T, U = T> {
   subscribe: (listener: (newState: U) => void) => Unsubscribe;
 }
 
+const remove = <T>(arr: T[], item: T): T[] => {
+  const indexToRemove = arr.indexOf(item);
+  if (indexToRemove === -1) {
+    return arr;
+  }
+  const clone = [ ...arr ];
+  clone.splice(indexToRemove, 1);
+  return clone;
+};
+
 const byKey = <T>(state: T, setters: { [K in keyof T]?: Setter<T[K]> }): T => {
   const keys = Object.keys(setters) as Array<keyof typeof setters>;
   return keys.reduce(
@@ -37,7 +47,7 @@ const byKey = <T>(state: T, setters: { [K in keyof T]?: Setter<T[K]> }): T => {
 export const createStore = <T>(initialState: T, ...middleware: Middleware<T>[]): Store<T> => {
   let state: T = middleware.reduce((s, m) => m(s), initialState);
   let nextTick: Promise<void> | null = null;
-  const listeners: Listener<T>[] = [];
+  let listeners: Listener<T>[] = [];
 
   const getState = () => state;
   const getTransformedState = getState;
@@ -57,12 +67,9 @@ export const createStore = <T>(initialState: T, ...middleware: Middleware<T>[]):
     }
   };
   const subscribe = (listener: Listener<T>): Unsubscribe => {
-    listeners.push(listener);
+    listeners = [ ...listeners, listener ];
     return () => {
-      const index = listeners.indexOf(listener);
-      if (index > -1) {
-        listeners.splice(index, 1);
-      }
+      listeners = remove(listeners, listener);
     };
   };
 
