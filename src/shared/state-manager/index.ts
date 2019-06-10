@@ -36,6 +36,7 @@ const byKey = <T>(state: T, setters: { [K in keyof T]?: Setter<T[K]> }): T => {
 
 export const createStore = <T>(initialState: T, ...middleware: Middleware<T>[]): Store<T> => {
   let state: T = middleware.reduce((s, m) => m(s), initialState);
+  let nextTick: Promise<void> | null = null;
   const listeners: Listener<T>[] = [];
 
   const getState = () => state;
@@ -47,7 +48,12 @@ export const createStore = <T>(initialState: T, ...middleware: Middleware<T>[]):
     const prevState = state;
     if (newState !== prevState) {
       state = middleware.reduce((s, m) => m(s, prevState), newState);
-      listeners.forEach(listener => listener(state));
+      if (!nextTick) {
+        nextTick = Promise.resolve().then(() => {
+          listeners.forEach(listener => listener(state));
+          nextTick = null;
+        });
+      }
     }
   };
   const subscribe = (listener: Listener<T>): Unsubscribe => {
@@ -88,8 +94,14 @@ export const composeStore = <T, U>(stores: StoreDict<T, U>): Store<T, U> => {
     });
   };
   const subscribe = (listener: Listener<U>) => {
-    const subscriptions = keys.map(key => stores[key].subscribe(newState => {
-      listener({ ...getTransformedState(), [key]: newState });
+    let nextTick: Promise<void> | null = null;
+    const subscriptions = keys.map(key => stores[key].subscribe(() => {
+      if (!nextTick) {
+        nextTick = Promise.resolve().then(() => {
+          listener(getTransformedState());
+          nextTick = null;
+        });
+      }
     }));
     return () => subscriptions.forEach(unsubscribe => unsubscribe());
   };

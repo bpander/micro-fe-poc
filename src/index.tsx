@@ -11,9 +11,12 @@ const dispatch: Dispatch<{ mapped: number; name: string[] }> = compoundStore.dis
 
 mappedStore.subscribe(s => console.log('mappedStore', s));
 priceStore.subscribe(s => console.log('priceStore', s));
-compoundStore.subscribe(s => console.log('compoundStore', s));
+compoundStore.subscribe(s => console.log('compoundStore1', s));
+compoundStore.subscribe(s => console.log('compoundStore2', s));
 
+let i = 0;
 const test = () => {
+  console.log('TEST #' + ++i);
   console.log('=== dispatch mappedStore');
   mappedStore.dispatch(add(1));
 
@@ -25,5 +28,8 @@ const test = () => {
 
   console.log('=== dispatch byKey');
   dispatch({ name: addName('abc'), mapped: add(1) });
+  console.log('');
 };
 test();
+
+setTimeout(test, 0);
