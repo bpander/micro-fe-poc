@@ -1,9 +1,9 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
 import { createContainer } from 'shared/orchestrator/createContainer';
 import { requestStore } from 'shared/config/DependencyMap';
 import { composeStore, mapStore } from 'shared/state-manager';
 import { Product } from 'team-product/modules/product/types/Product';
+import { reactAdapter } from 'shared/adapters/reactAdapter';
 
 interface ProductDetailProps {
   sku: string | null;
@@ -37,9 +37,6 @@ export const ProductDetailContainer = createContainer(
       ),
     });
 
-    ReactDOM.render(<ProductDetail {...propsStore.getTransformedState()} />, el);
-    return propsStore.subscribe(props => {
-      ReactDOM.render(<ProductDetail {...props} />, el);
-    });
+    return reactAdapter(el, propsStore, ProductDetail);
   },
 );
